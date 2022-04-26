@@ -46,6 +46,12 @@ class Game:
         elif _type == 2:
             self.Eheros.append(Hero(_id, _type, x, y, shield_life, is_controlled, health, vx, vy, near_base, threat_for))
 
+    def get_position_base_ennemi(self):
+        if self.position_base.getX()==0:
+            return Position(17630, 9000)
+        else:
+            return Position(0, 0)
+
     def add_m_health(self, health, mana):
         self.m_health = Health(health, mana)
     def add_e_health(self, health, mana):
@@ -62,6 +68,24 @@ class Game:
         return ret_monster
     
     def calcul_move(self):
+
+        # in case lot of mana, one hero goes to the middle
+        all_hero = 3
+        if self.m_health.mana>50:
+            all_hero = 2
+            hero_attack = self.mheros[0]
+            action=0
+
+            for m in self.monsters:
+                dist_h=m.get_position().distance(hero_attack.pos)
+                if dist_h<2200:
+                    print(f'SPELL CONTROL {m.id} {self.get_position_base_ennemi().getX()} {self.get_position_base_ennemi().getY()}')
+                    action =1
+                    m.add_ponderation(100000)
+                    break
+            if action==0:
+                print(f'MOVE {int(17630/2)} {int(9000/2)}')
+
         # ponderation for all known monster
         for m in self.monsters:
             # to my base
@@ -78,7 +102,8 @@ class Game:
             return k.ponderation
         self.monsters.sort(key=customSort)
 
-        for h in self.mheros:
+            
+        for h in self.mheros[3-all_hero:3]:
             dist = -1
             ret_monster: Monster = None
             for m in self.monsters[0:3]:
