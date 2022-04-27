@@ -23,3 +23,15 @@ def test_game():
 
 
     game.calcul_move()
+
+def test_begin():
+    game = Game(0, 0)
+    game.init_round()
+
+    game.add_m_health(3, 0)
+    game.add_e_health(3, 0)
+
+    game.addEntity(0, 1, 1131, 1131, 0, 0, -1, -1, -1, -1, -1)
+    game.addEntity(1, 1, 1414, 849, 0, 0, -1, -1, -1, -1, -1)
+    game.addEntity(2, 1, 849, 1414, 0, 0, -1, -1, -1, -1, -1)
+    game.calcul_move()
