@@ -100,7 +100,7 @@ class Game:
     
         if self.m_health.mana>50:
             if act1 is None and monster_in_base<3:
-                act1 = Action(self.get_position_base_ennemi(),"MOVE", m.id)
+                act1 = Action(self.get_position_base_ennemi(),"MOVE", 0)
         else:
             act1=None
 
