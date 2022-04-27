@@ -57,23 +57,39 @@ class Game:
         self.m_health = Health(health, mana)
     def add_e_health(self, health, mana):
         self.e_health = Health(health, mana)
-    def get_nearest_monster(self, Hero):
+    def get_nearest_monster(self, hero, lst_monster):
         dist = -1
         ret_monster: Monster = None
-        for m in self.monsters:
-            dist_courante = m.get_position().distance(self.position_base) 
+        for m in lst_monster:
+            dist_courante = m.get_position().distance(hero.pos) 
             if dist==-1 or dist_courante < dist:
                 if m.threat_for==1:
                     dist = dist_courante
                     ret_monster = m
         return ret_monster
-    
+
+    def get_nearest_hero(self, monster, lst_hero, lst_act):
+        dist = -1
+        ret_hero: Monster = None
+        for h in lst_hero:
+            if lst_act[h.id%3] is not None:
+                continue
+            dist_courante = h.get_position().distance(monster.pos) 
+            if dist==-1 or dist_courante < dist:
+                dist = dist_courante
+                ret_hero = h
+        return ret_hero
+
     def calcul_move(self):
         act:Array=[]
         act1=None
         monster_in_base = 0
         hero_attack = self.mheros[0]
         action=0
+        # by default define action move default
+        for h in self.mheros:
+            act.append(None)
+        
         for m in self.monsters:
             dist_base=m.get_position().distance(self.position_base)
             m.dist_suppress = dist_base/400
@@ -95,7 +111,7 @@ class Game:
             else:
                 m.add_ponderation(dist_base*pond_base_not_target)
 
-    # in case lot of mana, one hero goes to the middle
+        # in case lot of mana, one hero goes to the middle
         all_hero = 3
     
         if self.m_health.mana>50:
@@ -105,49 +121,40 @@ class Game:
             act1=None
 
         if act1 is not None :
-            act.append(act1)
+            act[0] = act1
             all_hero=2
-        # ponderation for all known monster
-        for m in self.monsters:
-            # to my base
-            dist_base=m.get_position().distance(self.position_base)
-            m.dist_suppress = dist_base/400
-            m.dist_base = dist_base
-            if m.threat_for==1:
-                m.add_ponderation(dist_base*pond_base)
-            else:
-                m.add_ponderation(dist_base*pond_base_not_target)
-            m.print(debug)
 
         def customSort(k):
             return k.ponderation
         self.monsters.sort(key=customSort)
 
-            
-        for h in self.mheros[3-all_hero:3]:
-            ret_monster: Monster = None
-            for m in self.monsters[0:3]:
-                dist_courante = m.get_position().distance(h.pos) 
-                # can we attack it
-                if m.health>0:
-                    attack = 0
-                    if dist_courante<800:
-                        m.health-=2
-                    else:
-                        attack = dist_courante/800
-                    if m.dist_base>10000:
-                        ret_monster=None
-                    else:
-                        m.health -= (m.dist_suppress-attack)/2
-                        ret_monster = m
-                        break
-                    
-            
-            if ret_monster is None:
-                act.append(Action(h.base_pos,"MOVE",0))
-            else:
-                act.append(Action(ret_monster.get_position(),"MOVE",0))
-            
+        for m in self.monsters[0:3]:
+            ret_monster = None
+            h = self.get_nearest_hero(m, self.mheros[3-all_hero:3], act)
+            if h is None:
+                continue
+            dist_courante = m.get_position().distance(h.pos) 
+            # can we attack it
+            if m.health>0:
+                attack = 0
+                if dist_courante<800:
+                    m.health-=2
+                else:
+                    attack = dist_courante/800
+                
+                if m.dist_base<800:
+                    # pchit
+                    act[h.id%3] = Action(self.get_position_base_ennemi(),"WIND",0, "Pchit")
+                elif m.dist_base<10000:
+                    m.health -= (m.dist_suppress-attack)/2
+                    ret_monster = m
+                    if act[h.id%3] is None:
+                        act[h.id%3] = Action(ret_monster.get_position(),"MOVE",0)
+        # by default define action move default
+        for h in self.mheros:
+            if act[h.id%3] is None:
+                act[h.id%3] = Action(h.base_pos,"MOVE",0)
+
         for a in act:
             a.print()
 
