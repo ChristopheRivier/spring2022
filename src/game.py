@@ -141,8 +141,8 @@ class Game:
                     m.health-=2
                 else:
                     attack = dist_courante/800
-                
-                if m.dist_base<800:
+                # take a little margin instead of 800 take 1000
+                if m.dist_base<1000 and dist_courante<1280:
                     # pchit
                     act[h.id%3] = Action(self.get_position_base_ennemi(),"WIND",0, "Pchit")
                 elif m.dist_base<10000:
